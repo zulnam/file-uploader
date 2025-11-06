@@ -47,28 +47,6 @@ export const useFileValidation = (config: FileValidationConfig = {}) => {
             };
         }
 
-        // Check for suspicious characters (/, \, .., ~, null bytes, etc.)
-        const suspiciousPatterns = [
-            /\//,          // forward slash
-            /\\/,          // backslash
-            /\.\./,        // double dot
-            /~/,           // tilde
-            /\0/,          // null byte
-            /\n/,          // newline
-            /\r/,          // carriage return
-            /\t/,          // tab
-        ];
-        
-        for (const pattern of suspiciousPatterns) {
-            if (pattern.test(fileName)) {
-                console.warn(`File "${fileName}" contains suspicious characters`);
-                return {
-                    isValid: false,
-                    errorMessage: `File "${fileName}" contains suspicious characters`
-                };
-            }
-        }
-
         // Check for valid extension: must exist but cannot be executable
         const extensionMatch = fileName.match(/\.([^.]+)$/);
         if (!extensionMatch) {
