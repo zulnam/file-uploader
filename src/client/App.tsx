@@ -1,5 +1,6 @@
 import { type ReactElement } from 'react';
 import FileUploader from './components/FileUploader';
+import { useFileValidation } from './hooks/useFileValidation';
 
 export const App = (): ReactElement => {
     return (
@@ -18,9 +19,8 @@ export const App = (): ReactElement => {
                 </p>
             </div>
             <div className="mx-auto max-w-3xl px-6 py-32 text-center sm:py-40 lg:px-8 bg-white rounded-lg shadow-lg">
-                <FileUploader onFilesSelected={() => {console.log('files selected')}}/>
+                <FileUploader onFilesSelected={() => {console.log('files selected')}} validationMethod={useFileValidation()} />
             </div>
-
         </main>
     );
 };
