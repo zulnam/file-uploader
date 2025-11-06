@@ -1,4 +1,5 @@
 import { type ReactElement } from 'react';
+import FileUploader from './components/FileUploader';
 
 export const App = (): ReactElement => {
     return (
@@ -16,6 +17,10 @@ export const App = (): ReactElement => {
                     Everything brand starts small, let&apos;s build something great.
                 </p>
             </div>
+            <div className="mx-auto max-w-3xl px-6 py-32 text-center sm:py-40 lg:px-8 bg-white rounded-lg shadow-lg">
+                <FileUploader onFilesSelected={() => {console.log('files selected')}}/>
+            </div>
+
         </main>
     );
 };
