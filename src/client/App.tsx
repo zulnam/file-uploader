@@ -1,23 +1,23 @@
 import { useState, useEffect, type ReactElement } from 'react';
+
+import FileList from './components/FileList';
 import FileUploader from './components/FileUploader';
 import { useFileValidation } from './hooks/useFileValidation';
-import FileList from './components/FileList';
 import { getFiles } from './services/getFiles';
 
 export const App = (): ReactElement => {
-
     const [files, setFiles] = useState<{ name: string; size: number }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    
-    //TODO: add refresh for when uploading files is complete
+    // TODO: add refresh for when uploading files is complete
     useEffect(() => {
         const fetchFiles = async () => {
             const files = await getFiles();
             setFiles(files);
             setIsLoading(false);
             console.log('Files:', files);
-        }
+        };
+        // eslint-disable-next-line no-void
         void fetchFiles();
     }, []);
     return (
@@ -36,7 +36,12 @@ export const App = (): ReactElement => {
                 </p>
             </div>
             <div className="mx-auto max-w-3xl px-6 py-32 text-center lg:px-8 rounded-lg shadow-lg bg-white">
-                <FileUploader onFilesSelected={() => {console.log('files selected')}} validationMethod={useFileValidation()} />
+                <FileUploader
+                    onFilesSelected={() => {
+                        console.log('files selected');
+                    }}
+                    validationMethod={useFileValidation()}
+                />
                 <FileList files={files} isLoading={isLoading} />
             </div>
         </main>

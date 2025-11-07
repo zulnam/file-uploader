@@ -12,67 +12,65 @@ export interface ValidationResult {
 }
 
 export const useFileValidation = (config: FileValidationConfig = {}) => {
-    const {
-        maxSize = 10 * 1024 * 1024,
-        maxNameLength = 255,
-        blockedExtensions = ['exe', 'dll', 'bat', 'cmd', 'sh', 'js', 'php', 'py', 'jar']
-    } = config;
+    const { maxSize = 10 * 1024 * 1024, maxNameLength = 255 } = config;
 
-    const validateFile = useCallback((file: File): ValidationResult => {
-        const fileName = file.name;
-        
-        // Check file size
-        if (maxSize && file.size > maxSize) {
-            return {
-                isValid: false,
-                errorMessage: `File "${fileName}" exceeds the maximum size of ${maxSize} bytes`
-            };
-        }
+    const validateFile = useCallback(
+        (file: File): ValidationResult => {
+            const fileName = file.name;
 
-        // Check for overly long names
-        if (fileName.length > maxNameLength) {
-            return {
-                isValid: false,
-                errorMessage: `File "${fileName}" name is too long (max ${maxNameLength} characters)`
-            };
-        }
+            // Check file size
+            if (maxSize && file.size > maxSize) {
+                return {
+                    isValid: false,
+                    errorMessage: `File "${fileName}" exceeds the maximum size of ${maxSize} bytes`,
+                };
+            }
 
-        // Check for safe naming pattern ([a-zA-Z0-9._-]+)
-        const safeNamePattern = /^[a-zA-Z0-9._-]+$/;
-        if (!safeNamePattern.test(fileName)) {
-            console.warn(`File "${fileName}" contains invalid characters. Only alphanumeric, dots, underscores, and hyphens are allowed`);
-            return {
-                isValid: false,
-                errorMessage: `File "${fileName}" contains invalid characters. Only alphanumeric, dots, underscores, and hyphens are allowed`
-            };
-        }
+            // Check for overly long names
+            if (fileName.length > maxNameLength) {
+                return {
+                    isValid: false,
+                    errorMessage: `File "${fileName}" name is too long (max ${maxNameLength} characters)`,
+                };
+            }
 
-        // Check for valid extension: must exist but cannot be executable
-        const extensionMatch = fileName.match(/\.([^.]+)$/);
-        if (!extensionMatch) {
-            console.warn(`File "${fileName}" must have a file extension`);
-            return {
-                isValid: false,
-                errorMessage: `File "${fileName}" must have a file extension`
-            };
-        }
+            // Check for safe naming pattern ([a-zA-Z0-9._-]+)
+            const safeNamePattern = /^[\w.-]+$/;
+            if (!safeNamePattern.test(fileName)) {
+                console.warn(
+                    `File "${fileName}" contains invalid characters. Only alphanumeric, dots, underscores, and hyphens are allowed`
+                );
+                return {
+                    isValid: false,
+                    errorMessage: `File "${fileName}" contains invalid characters. Only alphanumeric, dots, underscores, and hyphens are allowed`,
+                };
+            }
 
-        const extension = extensionMatch[1].toLowerCase();
-        const executableExtensions = [
-            'exe', 'dll', 'bat', 'cmd', 'sh', 
-            'js', 'php', 'py', 'jar'
-        ];
-        
-        if (executableExtensions.includes(extension)) {
-            console.warn(`File "${fileName}" has an executable extension (.${extension}) which is not allowed`);
-            return {
-                isValid: false,
-                errorMessage: `File "${fileName}" has an executable extension (.${extension}) which is not allowed`
-            };
-        }
-        
-        return { isValid: true };  // No errorMessage when valid
-    }, [maxSize, maxNameLength, blockedExtensions]);
+            // Check for valid extension: must exist but cannot be executable
+            const extensionMatch = fileName.match(/\.([^.]+)$/);
+            if (!extensionMatch) {
+                console.warn(`File "${fileName}" must have a file extension`);
+                return {
+                    isValid: false,
+                    errorMessage: `File "${fileName}" must have a file extension`,
+                };
+            }
+
+            const extension = extensionMatch[1].toLowerCase();
+            const executableExtensions = ['exe', 'dll', 'bat', 'cmd', 'sh', 'js', 'php', 'py', 'jar'];
+
+            if (executableExtensions.includes(extension)) {
+                console.warn(`File "${fileName}" has an executable extension (.${extension}) which is not allowed`);
+                return {
+                    isValid: false,
+                    errorMessage: `File "${fileName}" has an executable extension (.${extension}) which is not allowed`,
+                };
+            }
+
+            return { isValid: true };
+        },
+        [maxSize, maxNameLength]
+    );
 
     return validateFile;
 };
