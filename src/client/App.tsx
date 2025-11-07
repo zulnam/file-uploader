@@ -1,8 +1,25 @@
-import { type ReactElement } from 'react';
+import { useState, useEffect, type ReactElement } from 'react';
 import FileUploader from './components/FileUploader';
 import { useFileValidation } from './hooks/useFileValidation';
+import FileList from './components/FileList';
+import { getFiles } from './services/getFiles';
 
 export const App = (): ReactElement => {
+
+    const [files, setFiles] = useState<{ name: string; size: number }[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    
+    //TODO: add refresh for when uploading files is complete
+    useEffect(() => {
+        const fetchFiles = async () => {
+            const files = await getFiles();
+            setFiles(files);
+            setIsLoading(false);
+            console.log('Files:', files);
+        }
+        void fetchFiles();
+    }, []);
     return (
         <main className="relative isolate h-dvh">
             <img
@@ -18,8 +35,9 @@ export const App = (): ReactElement => {
                     Everything brand starts small, let&apos;s build something great.
                 </p>
             </div>
-            <div className="mx-auto max-w-3xl px-6 py-32 text-center sm:py-40 lg:px-8 bg-white rounded-lg shadow-lg">
+            <div className="mx-auto max-w-3xl px-6 py-32 text-center lg:px-8 rounded-lg shadow-lg bg-white">
                 <FileUploader onFilesSelected={() => {console.log('files selected')}} validationMethod={useFileValidation()} />
+                <FileList files={files} isLoading={isLoading} />
             </div>
         </main>
     );
