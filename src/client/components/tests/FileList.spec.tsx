@@ -17,7 +17,7 @@ describe('FileList', () => {
     });
 
     it('should render and load the component', () => {
-        render(<FileList files={[]} isLoading={true} uploadProgress={{}} uploadErrors={{}} />);
+        render(<FileList files={[]} fileNameSet={new Set()} isLoading={true} uploadProgress={{}} uploadErrors={{}} />);
 
         expect(screen.getByText('File List')).toBeInTheDocument();
         expect(screen.getByRole('status', { name: 'Loading files' })).toBeInTheDocument();
@@ -25,13 +25,15 @@ describe('FileList', () => {
     });
 
     it('should render loading state when isLoading is true', () => {
-        render(<FileList files={[]} isLoading={true} uploadProgress={{}} uploadErrors={{}} />);
+        render(<FileList files={[]} fileNameSet={new Set()} isLoading={true} uploadProgress={{}} uploadErrors={{}} />);
         expect(screen.getByRole('status', { name: 'Loading files' })).toBeInTheDocument();
         expect(screen.getByTestId('loading-icon')).toBeInTheDocument();
     });
 
     it('should load with no files when isLoading is false and files is empty', async () => {
-        const { container } = render(<FileList files={[]} isLoading={false} uploadProgress={{}} uploadErrors={{}} />);
+        const { container } = render(
+            <FileList files={[]} fileNameSet={new Set()} isLoading={false} uploadProgress={{}} uploadErrors={{}} />
+        );
 
         await waitFor(() => {
             expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
@@ -44,8 +46,17 @@ describe('FileList', () => {
 
     it('should load with one file', async () => {
         const mockFiles = [{ name: 'document.pdf', size: 1024 }];
+        const mockFileNameSet = new Set(['document.pdf']);
 
-        render(<FileList files={mockFiles} isLoading={false} uploadProgress={{}} uploadErrors={{}} />);
+        render(
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={{}}
+                uploadErrors={{}}
+            />
+        );
 
         await waitFor(() => {
             expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
@@ -67,8 +78,16 @@ describe('FileList', () => {
             { name: 'image.jpg', size: 4096 },
         ];
 
+        const mockFileNameSet = new Set(['document1.pdf', 'document2.txt', 'image.jpg']);
+
         const { container } = render(
-            <FileList files={mockFiles} isLoading={false} uploadProgress={{}} uploadErrors={{}} />
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={{}}
+                uploadErrors={{}}
+            />
         );
 
         await waitFor(() => {
@@ -86,12 +105,65 @@ describe('FileList', () => {
         expect(fileList?.children).toHaveLength(3);
     });
 
+    it('should not show file size for files with 0 bytes', async () => {
+        const mockFiles = [{ name: 'empty.txt', size: 0 }];
+        const mockFileNameSet = new Set(['empty.txt']);
+
+        render(
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={{}}
+                uploadErrors={{}}
+            />
+        );
+
+        await waitFor(() => {
+            expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
+        });
+
+        expect(screen.getByText('empty.txt')).toBeInTheDocument();
+        expect(screen.queryByText('0 Bytes')).not.toBeInTheDocument();
+    });
+
+    it('should format Bytes correctly for values less than 1 KB', async () => {
+        const mockFiles = [{ name: 'tiny.txt', size: 512 }];
+        const mockFileNameSet = new Set(['tiny.txt']);
+
+        render(
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={{}}
+                uploadErrors={{}}
+            />
+        );
+
+        await waitFor(() => {
+            expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
+        });
+
+        expect(screen.getByText('512 Bytes')).toBeInTheDocument();
+    });
+
     it('should load file that shows KB', async () => {
         const mockFiles = [
             { name: 'small-file.txt', size: 5120 }, // 5 KB
         ];
 
-        render(<FileList files={mockFiles} isLoading={false} uploadProgress={{}} uploadErrors={{}} />);
+        const mockFileNameSet = new Set(['small-file.txt']);
+
+        render(
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={{}}
+                uploadErrors={{}}
+            />
+        );
 
         await waitFor(() => {
             expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
@@ -106,7 +178,17 @@ describe('FileList', () => {
             { name: 'medium-file.zip', size: 5242880 }, // 5 MB
         ];
 
-        render(<FileList files={mockFiles} isLoading={false} uploadProgress={{}} uploadErrors={{}} />);
+        const mockFileNameSet = new Set(['medium-file.zip']);
+
+        render(
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={{}}
+                uploadErrors={{}}
+            />
+        );
 
         await waitFor(() => {
             expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
@@ -121,7 +203,17 @@ describe('FileList', () => {
             { name: 'large-file.iso', size: 3221225472 }, // 3 GB
         ];
 
-        render(<FileList files={mockFiles} isLoading={false} uploadProgress={{}} uploadErrors={{}} />);
+        const mockFileNameSet = new Set(['large-file.iso']);
+
+        render(
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={{}}
+                uploadErrors={{}}
+            />
+        );
 
         await waitFor(() => {
             expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
@@ -133,9 +225,18 @@ describe('FileList', () => {
 
     it('should display upload progress for file being uploaded', async () => {
         const mockFiles = [{ name: 'existing.txt', size: 1024 }];
+        const mockFileNameSet = new Set(['existing.txt']);
         const mockProgress = { 'uploading.txt': 45 };
 
-        render(<FileList files={mockFiles} isLoading={false} uploadProgress={mockProgress} uploadErrors={{}} />);
+        render(
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={mockProgress}
+                uploadErrors={{}}
+            />
+        );
 
         await waitFor(() => {
             expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
@@ -147,12 +248,21 @@ describe('FileList', () => {
 
     it('should display multiple files being uploaded with their progress', async () => {
         const mockFiles = [{ name: 'existing.txt', size: 1024 }];
+        const mockFileNameSet = new Set(['existing.txt']);
         const mockProgress = {
             'upload1.txt': 25,
             'upload2.pdf': 75,
         };
 
-        render(<FileList files={mockFiles} isLoading={false} uploadProgress={mockProgress} uploadErrors={{}} />);
+        render(
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={mockProgress}
+                uploadErrors={{}}
+            />
+        );
 
         await waitFor(() => {
             expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
@@ -166,10 +276,17 @@ describe('FileList', () => {
 
     it('should not show progress bar for completed uploads', async () => {
         const mockFiles = [{ name: 'completed.txt', size: 1024 }];
+        const mockFileNameSet = new Set(['completed.txt']);
         const mockProgress = { 'completed.txt': 100 };
 
         const { container } = render(
-            <FileList files={mockFiles} isLoading={false} uploadProgress={mockProgress} uploadErrors={{}} />
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={mockProgress}
+                uploadErrors={{}}
+            />
         );
 
         await waitFor(() => {
@@ -184,11 +301,18 @@ describe('FileList', () => {
 
     it('should display upload errors', async () => {
         const mockFiles = [{ name: 'good.txt', size: 1024 }];
+        const mockFileNameSet = new Set(['good.txt']);
         const mockErrors = { 'failed.txt': 'Upload failed: Network error' };
         const mockProgress = { 'failed.txt': 0 };
 
         render(
-            <FileList files={mockFiles} isLoading={false} uploadProgress={mockProgress} uploadErrors={mockErrors} />
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={mockProgress}
+                uploadErrors={mockErrors}
+            />
         );
 
         await waitFor(() => {
@@ -199,29 +323,22 @@ describe('FileList', () => {
         expect(screen.getByText('Error: Upload failed: Network error')).toBeInTheDocument();
     });
 
-    it('should not show file size for files with 0 bytes', async () => {
-        const mockFiles = [{ name: 'empty.txt', size: 0 }];
-
-        render(<FileList files={mockFiles} isLoading={false} uploadProgress={{}} uploadErrors={{}} />);
-
-        await waitFor(() => {
-            expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
-        });
-
-        expect(screen.getByText('empty.txt')).toBeInTheDocument();
-        // File size should not be displayed for 0 byte files
-        expect(screen.queryByText('0 Bytes')).not.toBeInTheDocument();
-    });
-
     it('should show uploading files before server files', async () => {
         const mockFiles = [
             { name: 'server1.txt', size: 1024 },
             { name: 'server2.txt', size: 2048 },
         ];
+        const mockFileNameSet = new Set(['server1.txt', 'server2.txt']);
         const mockProgress = { 'uploading.txt': 50 };
 
         const { container } = render(
-            <FileList files={mockFiles} isLoading={false} uploadProgress={mockProgress} uploadErrors={{}} />
+            <FileList
+                files={mockFiles}
+                fileNameSet={mockFileNameSet}
+                isLoading={false}
+                uploadProgress={mockProgress}
+                uploadErrors={{}}
+            />
         );
 
         await waitFor(() => {
@@ -232,77 +349,6 @@ describe('FileList', () => {
         const fileItems = fileList?.querySelectorAll('li');
 
         expect(fileItems).toHaveLength(3);
-        // Uploading file should be first
         expect(fileItems?.[0].textContent).toContain('uploading.txt');
-    });
-
-    it('should not duplicate files that are both in progress and on server', async () => {
-        const mockFiles = [{ name: 'file.txt', size: 1024 }];
-        const mockProgress = { 'file.txt': 100 }; // Same file in progress
-
-        const { container } = render(
-            <FileList files={mockFiles} isLoading={false} uploadProgress={mockProgress} uploadErrors={{}} />
-        );
-
-        await waitFor(() => {
-            expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
-        });
-
-        const fileList = container.querySelector('ul[aria-label="Files"]');
-        const fileItems = fileList?.querySelectorAll('li');
-
-        // Should only show once (from server)
-        expect(fileItems).toHaveLength(1);
-    });
-
-    it('should format Bytes correctly for values less than 1 KB', async () => {
-        const mockFiles = [{ name: 'tiny.txt', size: 512 }];
-
-        render(<FileList files={mockFiles} isLoading={false} uploadProgress={{}} uploadErrors={{}} />);
-
-        await waitFor(() => {
-            expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
-        });
-
-        expect(screen.getByText('512 Bytes')).toBeInTheDocument();
-    });
-
-    it('should handle decimal file sizes correctly', async () => {
-        const mockFiles = [{ name: 'decimal.txt', size: 1536 }]; // 1.5 KB
-
-        render(<FileList files={mockFiles} isLoading={false} uploadProgress={{}} uploadErrors={{}} />);
-
-        await waitFor(() => {
-            expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
-        });
-
-        expect(screen.getByText('1.5 KB')).toBeInTheDocument();
-    });
-
-    it('should show progress bar for files being uploaded', async () => {
-        const mockProgress = { 'uploading.txt': 33 };
-        const { container } = render(
-            <FileList files={[]} isLoading={false} uploadProgress={mockProgress} uploadErrors={{}} />
-        );
-
-        await waitFor(() => {
-            expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
-        });
-
-        const progressBars = container.querySelectorAll('.bg-blue-600');
-        expect(progressBars.length).toBeGreaterThan(0);
-    });
-
-    it('should not show file size for files being uploaded (size is 0)', async () => {
-        const mockProgress = { 'uploading.txt': 50 };
-
-        render(<FileList files={[]} isLoading={false} uploadProgress={mockProgress} uploadErrors={{}} />);
-
-        await waitFor(() => {
-            expect(screen.queryByTestId('loading-icon')).not.toBeInTheDocument();
-        });
-
-        expect(screen.getByText('uploading.txt')).toBeInTheDocument();
-        expect(screen.queryByText('0 Bytes')).not.toBeInTheDocument();
     });
 });

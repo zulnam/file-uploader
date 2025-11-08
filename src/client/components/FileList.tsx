@@ -5,12 +5,13 @@ import ProgressBar from './ProgressBar';
 
 export interface FileListProps {
     files: { name: string; size: number }[];
+    fileNameSet: Set<string>;
     isLoading: boolean;
     uploadProgress: Record<string, number>;
     uploadErrors: Record<string, string>;
 }
 
-const FileList = ({ files, isLoading, uploadProgress, uploadErrors }: FileListProps): ReactElement => {
+const FileList = ({ files, fileNameSet, isLoading, uploadProgress, uploadErrors }: FileListProps): ReactElement => {
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) {
             return '0 Bytes';
@@ -22,9 +23,8 @@ const FileList = ({ files, isLoading, uploadProgress, uploadErrors }: FileListPr
     };
 
     const allFiles = useMemo(() => {
-        const serverFileNames = new Set(files.map((f) => f.name));
         const uploadingFiles = Object.keys(uploadProgress)
-            .filter((fileName) => !serverFileNames.has(fileName))
+            .filter((fileName) => !fileNameSet.has(fileName))
             .map((fileName) => ({
                 name: fileName,
                 size: 0, // files being uploaded don't have a size yet
@@ -39,7 +39,7 @@ const FileList = ({ files, isLoading, uploadProgress, uploadErrors }: FileListPr
         }));
 
         return [...uploadingFiles, ...serverFilesWithProgress];
-    }, [files, uploadProgress, uploadErrors]);
+    }, [files, fileNameSet, uploadProgress, uploadErrors]);
 
     return (
         <div className="flex flex-col justify-center items-center h-full border-2 border-gray-300 rounded-lg p-8">

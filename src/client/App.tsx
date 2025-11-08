@@ -44,7 +44,13 @@ export const App = (): ReactElement => {
                     onFilesSelected={handleFilesSelected}
                     validationMethod={useFileValidation({ maxSize: 100 * 1024 * 1024 })} // 100 MB
                 />
-                <FileList files={files} isLoading={isLoading} uploadProgress={progress} uploadErrors={errors} />
+                <FileList
+                    files={files}
+                    fileNameSet={fileNameSet}
+                    isLoading={isLoading}
+                    uploadProgress={progress}
+                    uploadErrors={errors}
+                />
             </div>
         </main>
     );
