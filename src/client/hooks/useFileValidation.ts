@@ -31,19 +31,6 @@ export const useFileValidation = (config: FileValidationConfig = {}) => {
                 };
             }
 
-            const safeNamePattern = /^[\s\w.-]+$/;
-            if (!safeNamePattern.test(fileName)) {
-                // ideally this would be logged to a error tracking service like Sentry or Rollbar
-                // but for the purpose of this demo, we'll just log it to the console
-                console.warn(
-                    `File "${fileName}" contains invalid characters. Only alphanumeric, spaces, dots, underscores, and hyphens are allowed`
-                );
-                return {
-                    isValid: false,
-                    errorMessage: `File "${fileName}" contains invalid characters. Only alphanumeric, spaces, dots, underscores, and hyphens are allowed`,
-                };
-            }
-
             const extensionMatch = fileName.match(/\.([^.]+)$/);
             if (!extensionMatch) {
                 // ideally this would be logged to a error tracking service like Sentry or Rollbar

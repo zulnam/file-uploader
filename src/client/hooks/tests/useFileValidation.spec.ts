@@ -46,18 +46,6 @@ describe('useFileValidation', () => {
         });
     });
 
-    it('should return a validation result with an error message for invalid characters', () => {
-        const { result } = renderHook(() => useFileValidation());
-        const validationMethod = result.current;
-        const file = new File(['test'], 'te/st@#$%^&*().txt', { type: 'text/plain' });
-        const validationResult = validationMethod(file);
-        expect(validationResult).toEqual({
-            isValid: false,
-            errorMessage:
-                'File "te/st@#$%^&*().txt" contains invalid characters. Only alphanumeric, spaces, dots, underscores, and hyphens are allowed',
-        });
-    });
-
     it('should return a validation result with an error message for missing file extension', () => {
         const { result } = renderHook(() => useFileValidation());
         const validationMethod = result.current;
