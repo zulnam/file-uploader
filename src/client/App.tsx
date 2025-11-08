@@ -7,6 +7,9 @@ import { useFileUpload } from './hooks/useFileUpload';
 import { useFileValidation } from './hooks/useFileValidation';
 
 export const App = (): ReactElement => {
+    // its clear that the App component is doing a bit of prop drilling
+    // however for the scope of this demo, i believe it's fine
+    // for more complex apps we could use React Context or a state mangement library
     const { files, isLoading, refetch } = useFileList();
     const { uploadFiles, progress, errors } = useFileUpload();
 

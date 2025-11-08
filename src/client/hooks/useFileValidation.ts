@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 interface FileValidationConfig {
     maxSize?: number;
     maxNameLength?: number;
-    blockedExtensions?: string[];
 }
 
 export interface ValidationResult {
@@ -18,7 +17,6 @@ export const useFileValidation = (config: FileValidationConfig = {}) => {
         (file: File): ValidationResult => {
             const fileName = file.name;
 
-            // Check file size
             if (maxSize && file.size > maxSize) {
                 return {
                     isValid: false,
@@ -26,7 +24,6 @@ export const useFileValidation = (config: FileValidationConfig = {}) => {
                 };
             }
 
-            // Check for overly long names
             if (fileName.length > maxNameLength) {
                 return {
                     isValid: false,
@@ -34,9 +31,10 @@ export const useFileValidation = (config: FileValidationConfig = {}) => {
                 };
             }
 
-            // Check for safe naming pattern ([a-zA-Z0-9._-]+)
             const safeNamePattern = /^[\s\w.-]+$/;
             if (!safeNamePattern.test(fileName)) {
+                // ideally this would be logged to a error tracking service like Sentry or Rollbar
+                // but for the purpose of this demo, we'll just log it to the console
                 console.warn(
                     `File "${fileName}" contains invalid characters. Only alphanumeric, spaces, dots, underscores, and hyphens are allowed`
                 );
@@ -46,9 +44,10 @@ export const useFileValidation = (config: FileValidationConfig = {}) => {
                 };
             }
 
-            // Check for valid extension: must exist but cannot be executable
             const extensionMatch = fileName.match(/\.([^.]+)$/);
             if (!extensionMatch) {
+                // ideally this would be logged to a error tracking service like Sentry or Rollbar
+                // but for the purpose of this demo, we'll just log it to the console
                 console.warn(`File "${fileName}" must have a file extension`);
                 return {
                     isValid: false,
@@ -60,6 +59,8 @@ export const useFileValidation = (config: FileValidationConfig = {}) => {
             const executableExtensions = ['exe', 'dll', 'bat', 'cmd', 'sh', 'js', 'php', 'py', 'jar'];
 
             if (executableExtensions.includes(extension)) {
+                // ideally this would be logged to a error tracking service like Sentry or Rollbar
+                // but for the purpose of this demo, we'll just log it to the console
                 console.warn(`File "${fileName}" has an executable extension (.${extension}) which is not allowed`);
                 return {
                     isValid: false,

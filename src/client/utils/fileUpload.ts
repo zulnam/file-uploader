@@ -1,6 +1,6 @@
 import { uploadChunk, uploadSingle } from '../services/uploadFiles';
 
-// These would ideally live in AWS SSM:Parameter Store or similar
+// These would ideally live in AWS SSM:Parameter Store, environment variables, or similar
 const CHUNK_SIZE = 1024 * 1024; // 1 MB
 const LARGE_FILE_THRESHOLD = 5 * 1024 * 1024; // 5 MB
 

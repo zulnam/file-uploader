@@ -19,9 +19,10 @@ export const useFileList = () => {
         getFiles()
             .then((files) => {
                 setState({ files, isLoading: false });
-                console.log('Files:', files);
             })
             .catch((error) => {
+                // ideally this would be logged to a error tracking service like Sentry or Rollbar
+                // but for the purpose of this demo, we'll just log it to the console
                 console.error('Failed to fetch files:', error);
                 setState({ files: [], isLoading: false });
             });
