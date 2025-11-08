@@ -48,6 +48,8 @@ const FileUploader = ({ onFilesSelected, validationMethod }: FileUploaderProps):
             return;
         }
 
+        setValidationError(null);
+
         if (!validationMethod) {
             onFilesSelected(files);
             return;
