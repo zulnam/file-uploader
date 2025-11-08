@@ -29,7 +29,6 @@ describe('useFileList', () => {
         ];
 
         vi.spyOn(getFilesService, 'getFiles').mockResolvedValue(mockFiles);
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
         const { result } = renderHook(() => useFileList());
 
@@ -39,14 +38,10 @@ describe('useFileList', () => {
 
         expect(result.current.files).toEqual(mockFiles);
         expect(getFilesService.getFiles).toHaveBeenCalledTimes(1);
-        expect(consoleLogSpy).toHaveBeenCalledWith('Files:', mockFiles);
-
-        consoleLogSpy.mockRestore();
     });
 
     it('should handle empty file list', async () => {
         vi.spyOn(getFilesService, 'getFiles').mockResolvedValue([]);
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
         const { result } = renderHook(() => useFileList());
 
@@ -55,9 +50,6 @@ describe('useFileList', () => {
         });
 
         expect(result.current.files).toEqual([]);
-        expect(consoleLogSpy).toHaveBeenCalledWith('Files:', []);
-
-        consoleLogSpy.mockRestore();
     });
 
     it('should handle fetch errors', async () => {
@@ -86,7 +78,6 @@ describe('useFileList', () => {
         });
 
         vi.spyOn(getFilesService, 'getFiles').mockReturnValue(promise as Promise<{ name: string; size: number }[]>);
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
         const { result } = renderHook(() => useFileList());
 
@@ -99,14 +90,11 @@ describe('useFileList', () => {
         });
 
         expect(result.current.files).toEqual(mockFiles);
-
-        consoleLogSpy.mockRestore();
     });
 
     it('should provide refetch function', async () => {
         const mockFiles = [{ name: 'initial.txt', size: 100 }];
         vi.spyOn(getFilesService, 'getFiles').mockResolvedValue(mockFiles);
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
         const { result } = renderHook(() => useFileList());
 
@@ -115,8 +103,6 @@ describe('useFileList', () => {
         });
 
         expect(result.current.refetch).toBeInstanceOf(Function);
-
-        consoleLogSpy.mockRestore();
     });
 
     it('should refetch files when refetch is called', async () => {
@@ -127,7 +113,6 @@ describe('useFileList', () => {
         ];
 
         vi.spyOn(getFilesService, 'getFiles').mockResolvedValueOnce(initialFiles).mockResolvedValueOnce(updatedFiles);
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
         const { result } = renderHook(() => useFileList());
 
@@ -142,10 +127,7 @@ describe('useFileList', () => {
         await waitFor(() => {
             expect(result.current.files).toEqual(updatedFiles);
         });
-
         expect(getFilesService.getFiles).toHaveBeenCalledTimes(2);
-
-        consoleLogSpy.mockRestore();
     });
 
     it('should set loading state when refetching', async () => {
@@ -212,7 +194,6 @@ describe('useFileList', () => {
         }));
 
         vi.spyOn(getFilesService, 'getFiles').mockResolvedValue(largeFileList);
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
         const { result } = renderHook(() => useFileList());
 
@@ -222,8 +203,6 @@ describe('useFileList', () => {
 
         expect(result.current.files).toEqual(largeFileList);
         expect(result.current.files).toHaveLength(100);
-
-        consoleLogSpy.mockRestore();
     });
 
     it('should handle refetch errors', async () => {
@@ -231,7 +210,6 @@ describe('useFileList', () => {
         const refetchError = new Error('Refetch failed');
 
         vi.spyOn(getFilesService, 'getFiles').mockResolvedValueOnce(initialFiles).mockRejectedValueOnce(refetchError);
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
         const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
         const { result } = renderHook(() => useFileList());
@@ -251,7 +229,6 @@ describe('useFileList', () => {
         expect(result.current.files).toEqual([]);
         expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch files:', refetchError);
 
-        consoleLogSpy.mockRestore();
         consoleErrorSpy.mockRestore();
     });
 });

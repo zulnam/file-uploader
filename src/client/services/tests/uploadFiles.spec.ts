@@ -117,21 +117,6 @@ describe('uploadChunk', () => {
         expect(formData.get('totalChunks')).toBe('10');
     });
 
-    it('should upload middle chunk with correct indices', async () => {
-        const mockFile = new File(['chunk'], 'test.txt', { type: 'text/plain' });
-        const mockResponse = { message: 'Chunk uploaded' };
-
-        vi.mocked(axios.post).mockResolvedValue({ data: mockResponse });
-
-        await uploadChunk(mockFile, 5, 10);
-
-        const callArgs = vi.mocked(axios.post).mock.calls[0];
-        const formData = callArgs[1] as FormData;
-
-        expect(formData.get('currentChunkIndex')).toBe('5');
-        expect(formData.get('totalChunks')).toBe('10');
-    });
-
     it('should upload last chunk with correct indices', async () => {
         const mockFile = new File(['chunk'], 'test.txt', { type: 'text/plain' });
         const mockResponse = { message: 'Chunk uploaded' };

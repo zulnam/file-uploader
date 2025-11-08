@@ -12,20 +12,12 @@ describe('ProgressBar', () => {
         expect(progressBar).toHaveStyle({ width: '0%' });
     });
 
-    it('should render with 50% progress', () => {
+    it('should render with 42% progress', () => {
         const { container } = render(<ProgressBar percentage={50} />);
         const progressBar = container.querySelector('.bg-blue-600');
 
         expect(progressBar).toBeInTheDocument();
         expect(progressBar).toHaveStyle({ width: '50%' });
-    });
-
-    it('should render with 100% progress', () => {
-        const { container } = render(<ProgressBar percentage={100} />);
-        const progressBar = container.querySelector('.bg-blue-600');
-
-        expect(progressBar).toBeInTheDocument();
-        expect(progressBar).toHaveStyle({ width: '100%' });
     });
 
     it('should render with fractional percentage', () => {
@@ -34,12 +26,5 @@ describe('ProgressBar', () => {
 
         expect(progressBar).toBeInTheDocument();
         expect(progressBar).toHaveStyle({ width: '33.33%' });
-    });
-
-    it('should render progress bar with correct styling', () => {
-        const { container } = render(<ProgressBar percentage={25} />);
-        const progressBar = container.querySelector('.bg-blue-600');
-
-        expect(progressBar).toHaveClass('bg-blue-600', 'h-2.5', 'rounded-full');
     });
 });

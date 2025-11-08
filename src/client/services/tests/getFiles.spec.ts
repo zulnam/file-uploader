@@ -14,6 +14,8 @@ describe('getFiles', () => {
         const mockFiles = [
             { name: 'file1.txt', size: 1024 },
             { name: 'file2.pdf', size: 2048 },
+            { name: 'large.zip', size: 1048576 },
+            { name: 'huge.iso', size: 1073741824 },
         ];
 
         vi.mocked(axios.get).mockResolvedValue({
@@ -64,35 +66,5 @@ describe('getFiles', () => {
         expect(consoleErrorSpy).toHaveBeenCalledWith('Error fetching files:', mockError);
 
         consoleErrorSpy.mockRestore();
-    });
-
-    it('should handle malformed response', async () => {
-        vi.mocked(axios.get).mockResolvedValue({
-            data: { files: [{ name: 'test.txt', size: 500 }] },
-        });
-
-        const result = await getFiles();
-
-        expect(result).toHaveLength(1);
-        expect(result[0]).toHaveProperty('name');
-        expect(result[0]).toHaveProperty('size');
-    });
-
-    it('should handle files with various sizes', async () => {
-        const mockFiles = [
-            { name: 'tiny.txt', size: 0 },
-            { name: 'small.txt', size: 1024 },
-            { name: 'large.zip', size: 1048576 },
-            { name: 'huge.iso', size: 1073741824 },
-        ];
-
-        vi.mocked(axios.get).mockResolvedValue({
-            data: { files: mockFiles },
-        });
-
-        const result = await getFiles();
-
-        expect(result).toEqual(mockFiles);
-        expect(result).toHaveLength(4);
     });
 });

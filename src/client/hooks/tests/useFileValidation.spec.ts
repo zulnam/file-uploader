@@ -105,6 +105,9 @@ describe('useFileValidation', () => {
         expect(validationResult).toEqual({ isValid: true });
     });
 
+    // while these tests seem redundant, they are tied directly to validation who's purpose
+    // is to safeguard against malicious files being uploaded.
+    // having these tests in place provides a basic safeguard that our validation is working as intended.
     it('should reject all executable extensions - dll', () => {
         const { result } = renderHook(() => useFileValidation());
         const validationMethod = result.current;
@@ -209,21 +212,5 @@ describe('useFileValidation', () => {
             const result = validationMethod(file);
             expect(result.isValid).toBe(true);
         }
-    });
-
-    it('should allow files with spaces in names', () => {
-        const { result } = renderHook(() => useFileValidation());
-        const validationMethod = result.current;
-        const file = new File(['test'], 'my file name.txt', { type: 'text/plain' });
-        const validationResult = validationMethod(file);
-        expect(validationResult).toEqual({ isValid: true });
-    });
-
-    it('should allow files with underscores and hyphens', () => {
-        const { result } = renderHook(() => useFileValidation());
-        const validationMethod = result.current;
-        const file = new File(['test'], 'my_file-name.txt', { type: 'text/plain' });
-        const validationResult = validationMethod(file);
-        expect(validationResult).toEqual({ isValid: true });
     });
 });

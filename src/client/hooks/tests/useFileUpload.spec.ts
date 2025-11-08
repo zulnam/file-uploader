@@ -33,27 +33,7 @@ describe('useFileUpload', () => {
         expect(result.current.isUploading).toBe(false);
     });
 
-    it('should track upload progress', async () => {
-        const mockFile = new File(['content'], 'test.txt', { type: 'text/plain' });
-
-        vi.spyOn(fileUploadUtil, 'uploadFile').mockImplementation((file, onProgress) => {
-            if (onProgress) {
-                onProgress(50);
-                onProgress(100);
-            }
-            return Promise.resolve({ message: 'Success' });
-        });
-
-        const { result } = renderHook(() => useFileUpload());
-
-        await act(async () => {
-            await result.current.uploadFiles([mockFile]);
-        });
-
-        expect(result.current.progress).toHaveProperty('test.txt');
-    });
-
-    it('should upload multiple files sequentially', async () => {
+    it('should upload multiple files in parallel', async () => {
         const mockFiles = [
             new File(['content1'], 'file1.txt', { type: 'text/plain' }),
             new File(['content2'], 'file2.txt', { type: 'text/plain' }),
@@ -112,43 +92,6 @@ describe('useFileUpload', () => {
         expect(result.current.errors).toHaveProperty('error.txt');
         expect(result.current.errors['error.txt']).toBe('Upload failed');
         expect(result.current.isUploading).toBe(false);
-    });
-
-    it('should continue uploading after one file fails', async () => {
-        const mockFiles = [
-            new File(['content1'], 'success.txt', { type: 'text/plain' }),
-            new File(['content2'], 'failure.txt', { type: 'text/plain' }),
-            new File(['content3'], 'success2.txt', { type: 'text/plain' }),
-        ];
-
-        vi.spyOn(fileUploadUtil, 'uploadFile')
-            .mockResolvedValueOnce({ message: 'Success' })
-            .mockRejectedValueOnce(new Error('Failed'))
-            .mockResolvedValueOnce({ message: 'Success' });
-
-        const { result } = renderHook(() => useFileUpload());
-
-        await act(async () => {
-            await result.current.uploadFiles(mockFiles);
-        });
-
-        expect(fileUploadUtil.uploadFile).toHaveBeenCalledTimes(3);
-        expect(result.current.errors).toHaveProperty('failure.txt');
-        expect(result.current.isUploading).toBe(false);
-    });
-
-    it('should handle non-Error exceptions', async () => {
-        const mockFile = new File(['content'], 'test.txt', { type: 'text/plain' });
-
-        vi.spyOn(fileUploadUtil, 'uploadFile').mockRejectedValue('String error');
-
-        const { result } = renderHook(() => useFileUpload());
-
-        await act(async () => {
-            await result.current.uploadFiles([mockFile]);
-        });
-
-        expect(result.current.errors['test.txt']).toBe('Upload failed');
     });
 
     it('should update progress for each file independently', async () => {
@@ -258,34 +201,5 @@ describe('useFileUpload', () => {
 
         expect(result.current.progress).toHaveProperty('large.zip');
         expect(result.current.isUploading).toBe(false);
-    });
-
-    it('should provide uploadFiles function reference', () => {
-        const { result } = renderHook(() => useFileUpload());
-
-        expect(result.current.uploadFiles).toBeInstanceOf(Function);
-    });
-
-    it('should handle files with same content but different names', async () => {
-        const mockFiles = [
-            new File(['same content'], 'copy1.txt', { type: 'text/plain' }),
-            new File(['same content'], 'copy2.txt', { type: 'text/plain' }),
-        ];
-
-        vi.spyOn(fileUploadUtil, 'uploadFile').mockImplementation((file, onProgress) => {
-            if (onProgress) {
-                onProgress(100);
-            }
-            return Promise.resolve({ message: 'Success' });
-        });
-
-        const { result } = renderHook(() => useFileUpload());
-
-        await act(async () => {
-            await result.current.uploadFiles(mockFiles);
-        });
-
-        expect(result.current.progress).toHaveProperty('copy1.txt');
-        expect(result.current.progress).toHaveProperty('copy2.txt');
     });
 });

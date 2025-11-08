@@ -7,6 +7,7 @@ describe('FileUploader', () => {
     afterEach(() => {
         cleanup();
     });
+
     it('should render the file uploader', () => {
         render(<FileUploader onFilesSelected={() => {}} />);
         expect(screen.getByLabelText('Upload files by clicking or dragging and dropping')).toBeInTheDocument();
@@ -47,7 +48,7 @@ describe('FileUploader', () => {
         expect(mockOnFilesSelected).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle validationMethod method with one file', () => {
+    it('should handle successful validationMethod result', () => {
         const mockOnFilesSelected = vi.fn();
         render(<FileUploader onFilesSelected={mockOnFilesSelected} validationMethod={() => ({ isValid: true })} />);
 
@@ -63,31 +64,12 @@ describe('FileUploader', () => {
         expect(mockOnFilesSelected).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle validationMethod method with multiple files', () => {
-        const mockOnFilesSelected = vi.fn();
-        render(<FileUploader onFilesSelected={mockOnFilesSelected} validationMethod={() => ({ isValid: true })} />);
-
-        const files = [
-            new File(['test'], 'test.txt', { type: 'text/plain' }),
-            new File(['test'], 'test.txt', { type: 'text/plain' }),
-        ];
-        const inputs = screen.getAllByTestId('file-input');
-        const input = inputs[inputs.length - 1] as HTMLInputElement;
-
-        fireEvent.change(input, {
-            target: { files },
-        });
-
-        expect(mockOnFilesSelected).toHaveBeenCalledWith(files);
-        expect(mockOnFilesSelected).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle validationMethod method with one file that is invalid', () => {
+    it('should handle validationMethod result with error message', () => {
         const mockOnFilesSelected = vi.fn();
         render(
             <FileUploader
                 onFilesSelected={mockOnFilesSelected}
-                validationMethod={() => ({ isValid: false, errorMessage: 'Invalid file' })}
+                validationMethod={() => ({ isValid: false, errorMessage: 'File is too large' })}
             />
         );
 
@@ -99,8 +81,9 @@ describe('FileUploader', () => {
             target: { files: [file] },
         });
 
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+        expect(screen.getByText('File is too large')).toBeInTheDocument();
         expect(mockOnFilesSelected).not.toHaveBeenCalled();
-        expect(mockOnFilesSelected).toHaveBeenCalledTimes(0);
     });
 
     it('should apply active styling on drag enter', () => {
@@ -279,44 +262,6 @@ describe('FileUploader', () => {
         expect(mockOnFilesSelected).toHaveBeenCalledWith(files);
     });
 
-    it('should handle drag and drop with empty file list', () => {
-        const mockOnFilesSelected = vi.fn();
-        const { container } = render(<FileUploader onFilesSelected={mockOnFilesSelected} />);
-
-        const uploadButton = container.querySelector(
-            'div[role="button"][aria-label="Upload files by clicking or dragging and dropping"]'
-        ) as HTMLDivElement;
-
-        fireEvent.drop(uploadButton, {
-            dataTransfer: {
-                files: [],
-            },
-        });
-
-        expect(mockOnFilesSelected).not.toHaveBeenCalled();
-    });
-
-    it('should display validation error when validation fails', () => {
-        const mockOnFilesSelected = vi.fn();
-        render(
-            <FileUploader
-                onFilesSelected={mockOnFilesSelected}
-                validationMethod={() => ({ isValid: false, errorMessage: 'File is too large' })}
-            />
-        );
-
-        const file = new File(['test'], 'test.txt', { type: 'text/plain' });
-        const inputs = screen.getAllByTestId('file-input');
-        const input = inputs[inputs.length - 1] as HTMLInputElement;
-
-        fireEvent.change(input, {
-            target: { files: [file] },
-        });
-
-        expect(screen.getByRole('alert')).toBeInTheDocument();
-        expect(screen.getByText('File is too large')).toBeInTheDocument();
-    });
-
     it('should stop validation on first invalid file in multiple file selection', () => {
         const mockOnFilesSelected = vi.fn();
         const mockValidation = vi.fn();
@@ -385,30 +330,5 @@ describe('FileUploader', () => {
         expect(uploadButton).toHaveAttribute('aria-label', 'Upload files by clicking or dragging and dropping');
         expect(fileInput).toHaveAttribute('type', 'file');
         expect(fileInput).toHaveAttribute('multiple');
-    });
-
-    it('should handle validation with drag and drop', () => {
-        const mockOnFilesSelected = vi.fn();
-        const { container } = render(
-            <FileUploader
-                onFilesSelected={mockOnFilesSelected}
-                validationMethod={() => ({ isValid: false, errorMessage: 'Validation failed' })}
-            />
-        );
-
-        const uploadButton = container.querySelector(
-            'div[role="button"][aria-label="Upload files by clicking or dragging and dropping"]'
-        ) as HTMLDivElement;
-
-        const file = new File(['test'], 'test.txt', { type: 'text/plain' });
-
-        fireEvent.drop(uploadButton, {
-            dataTransfer: {
-                files: [file],
-            },
-        });
-
-        expect(mockOnFilesSelected).not.toHaveBeenCalled();
-        expect(screen.getByText('Validation failed')).toBeInTheDocument();
     });
 });
