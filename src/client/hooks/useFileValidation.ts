@@ -35,14 +35,14 @@ export const useFileValidation = (config: FileValidationConfig = {}) => {
             }
 
             // Check for safe naming pattern ([a-zA-Z0-9._-]+)
-            const safeNamePattern = /^[\w.-]+$/;
+            const safeNamePattern = /^[\s\w.-]+$/;
             if (!safeNamePattern.test(fileName)) {
                 console.warn(
-                    `File "${fileName}" contains invalid characters. Only alphanumeric, dots, underscores, and hyphens are allowed`
+                    `File "${fileName}" contains invalid characters. Only alphanumeric, spaces, dots, underscores, and hyphens are allowed`
                 );
                 return {
                     isValid: false,
-                    errorMessage: `File "${fileName}" contains invalid characters. Only alphanumeric, dots, underscores, and hyphens are allowed`,
+                    errorMessage: `File "${fileName}" contains invalid characters. Only alphanumeric, spaces, dots, underscores, and hyphens are allowed`,
                 };
             }
 

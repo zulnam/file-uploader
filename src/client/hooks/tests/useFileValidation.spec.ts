@@ -54,7 +54,7 @@ describe('useFileValidation', () => {
         expect(validationResult).toEqual({
             isValid: false,
             errorMessage:
-                'File "te/st@#$%^&*().txt" contains invalid characters. Only alphanumeric, dots, underscores, and hyphens are allowed',
+                'File "te/st@#$%^&*().txt" contains invalid characters. Only alphanumeric, spaces, dots, underscores, and hyphens are allowed',
         });
     });
 
