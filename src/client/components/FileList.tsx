@@ -1,13 +1,16 @@
-import { type ReactElement } from 'react';
+import { type ReactElement, useMemo } from 'react';
 
 import LoadingIcon from './LoadingIcon';
+import ProgressBar from './ProgressBar';
 
 export interface FileListProps {
     files: { name: string; size: number }[];
     isLoading: boolean;
+    uploadProgress: Record<string, number>;
+    uploadErrors: Record<string, string>;
 }
 
-const FileList = ({ files, isLoading }: FileListProps): ReactElement => {
+const FileList = ({ files, isLoading, uploadProgress, uploadErrors }: FileListProps): ReactElement => {
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) {
             return '0 Bytes';
@@ -17,6 +20,26 @@ const FileList = ({ files, isLoading }: FileListProps): ReactElement => {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return `${Math.round((bytes / k ** i) * 100) / 100} ${sizes[i]}`;
     };
+
+    const allFiles = useMemo(() => {
+        const serverFileNames = new Set(files.map((f) => f.name));
+        const uploadingFiles = Object.keys(uploadProgress)
+            .filter((fileName) => !serverFileNames.has(fileName))
+            .map((fileName) => ({
+                name: fileName,
+                size: 0, // files being uploaded don't have a size yet
+                progress: uploadProgress[fileName],
+                error: uploadErrors[fileName],
+            }));
+
+        const serverFilesWithProgress = files.map((file) => ({
+            ...file,
+            progress: 100,
+            error: undefined,
+        }));
+
+        return [...uploadingFiles, ...serverFilesWithProgress];
+    }, [files, uploadProgress, uploadErrors]);
 
     return (
         <div className="flex flex-col justify-center items-center h-full border-2 border-gray-300 rounded-lg p-8">
@@ -28,22 +51,39 @@ const FileList = ({ files, isLoading }: FileListProps): ReactElement => {
                         <span className="sr-only">Loading files...</span>
                     </div>
                 ) : (
-                    <div className="flex flex-col">
-                        {files.length > 0 ? (
+                    <div className="flex flex-col w-full">
+                        {allFiles.length > 0 ? (
                             <>
                                 <span className="sr-only">
-                                    {files.length} {files.length === 1 ? 'file' : 'files'} uploaded
+                                    {allFiles.length} {allFiles.length === 1 ? 'file' : 'files'}
                                 </span>
-                                <ul className="space-y-2" aria-label="Uploaded files">
-                                    {files.map((file) => (
-                                        <li key={file.name} className="flex flex-row justify-between">
-                                            <span className="font-medium">{file.name}</span>
-                                            <span
-                                                className="text-gray-600"
-                                                aria-label={`File size: ${formatFileSize(file.size)}`}
-                                            >
-                                                {formatFileSize(file.size)}
-                                            </span>
+                                <ul className="space-y-4" aria-label="Files">
+                                    {allFiles.map((file) => (
+                                        <li key={file.name} className="flex flex-col space-y-2">
+                                            <div className="flex flex-row justify-between">
+                                                <span className="font-medium">{file.name}</span>
+                                                {file.size > 0 && (
+                                                    <span
+                                                        className="text-gray-600"
+                                                        aria-label={`File size: ${formatFileSize(file.size)}`}
+                                                    >
+                                                        {formatFileSize(file.size)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {file.progress !== undefined && file.progress < 100 && (
+                                                <div className="flex flex-col space-y-1">
+                                                    <ProgressBar percentage={file.progress} />
+                                                    <span className="text-xs text-gray-500 text-right">
+                                                        {Math.round(file.progress)}%
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {file.error && (
+                                                <span className="text-xs text-red-500" role="alert">
+                                                    Error: {file.error}
+                                                </span>
+                                            )}
                                         </li>
                                     ))}
                                 </ul>

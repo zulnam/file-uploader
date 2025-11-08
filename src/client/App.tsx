@@ -1,25 +1,15 @@
-import { useState, useEffect, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 
 import FileList from './components/FileList';
 import FileUploader from './components/FileUploader';
+import { useFileList } from './hooks/useFileList';
+import { useFileUpload } from './hooks/useFileUpload';
 import { useFileValidation } from './hooks/useFileValidation';
-import { getFiles } from './services/getFiles';
 
 export const App = (): ReactElement => {
-    const [files, setFiles] = useState<{ name: string; size: number }[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { files, isLoading, refetch } = useFileList();
+    const { uploadFiles, progress, errors } = useFileUpload();
 
-    // TODO: add refresh for when uploading files is complete
-    useEffect(() => {
-        const fetchFiles = async () => {
-            const files = await getFiles();
-            setFiles(files);
-            setIsLoading(false);
-            console.log('Files:', files);
-        };
-        // eslint-disable-next-line no-void
-        void fetchFiles();
-    }, []);
     return (
         <main className="relative isolate h-dvh">
             <img
@@ -37,12 +27,13 @@ export const App = (): ReactElement => {
             </div>
             <div className="mx-auto max-w-3xl px-6 py-32 text-center lg:px-8 rounded-lg shadow-lg bg-white">
                 <FileUploader
-                    onFilesSelected={() => {
-                        console.log('files selected');
+                    onFilesSelected={async (files) => {
+                        await uploadFiles(files);
+                        refetch();
                     }}
-                    validationMethod={useFileValidation()}
+                    validationMethod={useFileValidation({ maxSize: 100 * 1024 * 1024 })} // 100 MB
                 />
-                <FileList files={files} isLoading={isLoading} />
+                <FileList files={files} isLoading={isLoading} uploadProgress={progress} uploadErrors={errors} />
             </div>
         </main>
     );
