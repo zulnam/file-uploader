@@ -105,6 +105,9 @@ const FileUploader = ({ onFilesSelected, validationMethod }: FileUploaderProps):
                     style={{ filter: 'invert(1)' }}
                 />
             </div>
+            <label htmlFor="file-input" className="sr-only">
+                Click here to upload files or drag and drop them here
+            </label>
             <input
                 ref={fileInputRef}
                 id="file-input"
