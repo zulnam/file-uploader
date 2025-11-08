@@ -1,8 +1,9 @@
-import { type ReactElement } from 'react';
+import { type ReactElement, useCallback } from 'react';
 
 import FileList from './components/FileList';
 import FileUploader from './components/FileUploader';
 import { useFileList } from './hooks/useFileList';
+import { useFileNameConflictResolution } from './hooks/useFileNameConflictResolution';
 import { useFileUpload } from './hooks/useFileUpload';
 import { useFileValidation } from './hooks/useFileValidation';
 
@@ -10,8 +11,18 @@ export const App = (): ReactElement => {
     // its clear that the App component is doing a bit of prop drilling
     // however for the scope of this demo, i believe it's fine
     // for more complex apps we could use React Context or a state mangement library
-    const { files, isLoading, refetch } = useFileList();
+    const { files, fileNameSet, isLoading, refetch } = useFileList();
     const { uploadFiles, progress, errors } = useFileUpload();
+    const { resolveFileNameConflicts } = useFileNameConflictResolution(fileNameSet);
+
+    const handleFilesSelected = useCallback(
+        async (selectedFiles: File[]) => {
+            const resolvedFileNames = resolveFileNameConflicts(selectedFiles);
+            await uploadFiles(resolvedFileNames);
+            refetch();
+        },
+        [resolveFileNameConflicts, uploadFiles, refetch]
+    );
 
     return (
         <main className="relative isolate h-dvh">
@@ -30,10 +41,7 @@ export const App = (): ReactElement => {
             </div>
             <div className="mx-auto max-w-3xl px-6 py-32 text-center lg:px-8 rounded-lg shadow-lg bg-white">
                 <FileUploader
-                    onFilesSelected={async (files) => {
-                        await uploadFiles(files);
-                        refetch();
-                    }}
+                    onFilesSelected={handleFilesSelected}
                     validationMethod={useFileValidation({ maxSize: 100 * 1024 * 1024 })} // 100 MB
                 />
                 <FileList files={files} isLoading={isLoading} uploadProgress={progress} uploadErrors={errors} />
