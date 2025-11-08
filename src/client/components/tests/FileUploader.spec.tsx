@@ -1,9 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, cleanup } from '@testing-library/react';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 
 import FileUploader from '../FileUploader';
 
 describe('FileUploader', () => {
+    afterEach(() => {
+        cleanup();
+    });
     it('should render the file uploader', () => {
         render(<FileUploader onFilesSelected={() => {}} />);
         expect(screen.getByLabelText('Upload files by clicking or dragging and dropping')).toBeInTheDocument();
@@ -184,5 +187,228 @@ describe('FileUploader', () => {
         expect(uploadButton).not.toHaveClass('border-blue-400');
         expect(uploadButton).not.toHaveClass('bg-blue-50');
         expect(mockOnFilesSelected).toHaveBeenCalledWith([file]);
+    });
+
+    it('should trigger file input on Enter key press', () => {
+        const mockOnFilesSelected = vi.fn();
+        const { container } = render(<FileUploader onFilesSelected={mockOnFilesSelected} />);
+
+        const uploadButton = container.querySelector(
+            'div[role="button"][aria-label="Upload files by clicking or dragging and dropping"]'
+        ) as HTMLDivElement;
+
+        const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+        const clickSpy = vi.spyOn(fileInput, 'click');
+
+        fireEvent.keyDown(uploadButton, { key: 'Enter' });
+
+        expect(clickSpy).toHaveBeenCalled();
+        clickSpy.mockRestore();
+    });
+
+    it('should trigger file input on Space key press', () => {
+        const mockOnFilesSelected = vi.fn();
+        const { container } = render(<FileUploader onFilesSelected={mockOnFilesSelected} />);
+
+        const uploadButton = container.querySelector(
+            'div[role="button"][aria-label="Upload files by clicking or dragging and dropping"]'
+        ) as HTMLDivElement;
+
+        const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+        const clickSpy = vi.spyOn(fileInput, 'click');
+
+        fireEvent.keyDown(uploadButton, { key: ' ' });
+
+        expect(clickSpy).toHaveBeenCalled();
+        clickSpy.mockRestore();
+    });
+
+    it('should not trigger file input on other key presses', () => {
+        const mockOnFilesSelected = vi.fn();
+        const { container } = render(<FileUploader onFilesSelected={mockOnFilesSelected} />);
+
+        const uploadButton = container.querySelector(
+            'div[role="button"][aria-label="Upload files by clicking or dragging and dropping"]'
+        ) as HTMLDivElement;
+
+        const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+        const clickSpy = vi.spyOn(fileInput, 'click');
+
+        fireEvent.keyDown(uploadButton, { key: 'a' });
+        fireEvent.keyDown(uploadButton, { key: 'Escape' });
+        fireEvent.keyDown(uploadButton, { key: 'Tab' });
+
+        expect(clickSpy).not.toHaveBeenCalled();
+        clickSpy.mockRestore();
+    });
+
+    it('should handle empty file selection (no files chosen)', () => {
+        const mockOnFilesSelected = vi.fn();
+        render(<FileUploader onFilesSelected={mockOnFilesSelected} />);
+
+        const inputs = screen.getAllByTestId('file-input');
+        const input = inputs[inputs.length - 1] as HTMLInputElement;
+
+        fireEvent.change(input, {
+            target: { files: [] },
+        });
+
+        expect(mockOnFilesSelected).not.toHaveBeenCalled();
+    });
+
+    it('should handle drag and drop with multiple files', () => {
+        const mockOnFilesSelected = vi.fn();
+        const { container } = render(<FileUploader onFilesSelected={mockOnFilesSelected} />);
+
+        const uploadButton = container.querySelector(
+            'div[role="button"][aria-label="Upload files by clicking or dragging and dropping"]'
+        ) as HTMLDivElement;
+
+        const files = [
+            new File(['content1'], 'file1.txt', { type: 'text/plain' }),
+            new File(['content2'], 'file2.txt', { type: 'text/plain' }),
+            new File(['content3'], 'file3.pdf', { type: 'application/pdf' }),
+        ];
+
+        fireEvent.drop(uploadButton, {
+            dataTransfer: {
+                files,
+            },
+        });
+
+        expect(mockOnFilesSelected).toHaveBeenCalledWith(files);
+    });
+
+    it('should handle drag and drop with empty file list', () => {
+        const mockOnFilesSelected = vi.fn();
+        const { container } = render(<FileUploader onFilesSelected={mockOnFilesSelected} />);
+
+        const uploadButton = container.querySelector(
+            'div[role="button"][aria-label="Upload files by clicking or dragging and dropping"]'
+        ) as HTMLDivElement;
+
+        fireEvent.drop(uploadButton, {
+            dataTransfer: {
+                files: [],
+            },
+        });
+
+        expect(mockOnFilesSelected).not.toHaveBeenCalled();
+    });
+
+    it('should display validation error when validation fails', () => {
+        const mockOnFilesSelected = vi.fn();
+        render(
+            <FileUploader
+                onFilesSelected={mockOnFilesSelected}
+                validationMethod={() => ({ isValid: false, errorMessage: 'File is too large' })}
+            />
+        );
+
+        const file = new File(['test'], 'test.txt', { type: 'text/plain' });
+        const inputs = screen.getAllByTestId('file-input');
+        const input = inputs[inputs.length - 1] as HTMLInputElement;
+
+        fireEvent.change(input, {
+            target: { files: [file] },
+        });
+
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+        expect(screen.getByText('File is too large')).toBeInTheDocument();
+    });
+
+    it('should stop validation on first invalid file in multiple file selection', () => {
+        const mockOnFilesSelected = vi.fn();
+        const mockValidation = vi.fn();
+        mockValidation
+            .mockReturnValueOnce({ isValid: true })
+            .mockReturnValueOnce({ isValid: false, errorMessage: 'Invalid file' });
+
+        render(<FileUploader onFilesSelected={mockOnFilesSelected} validationMethod={mockValidation} />);
+
+        const files = [
+            new File(['test1'], 'valid.txt', { type: 'text/plain' }),
+            new File(['test2'], 'invalid.txt', { type: 'text/plain' }),
+            new File(['test3'], 'notchecked.txt', { type: 'text/plain' }),
+        ];
+        const inputs = screen.getAllByTestId('file-input');
+        const input = inputs[inputs.length - 1] as HTMLInputElement;
+
+        fireEvent.change(input, {
+            target: { files },
+        });
+
+        expect(mockValidation).toHaveBeenCalledTimes(2);
+        expect(mockOnFilesSelected).not.toHaveBeenCalled();
+        expect(screen.getByText('Invalid file')).toBeInTheDocument();
+    });
+
+    it('should display default validation error message when none provided', () => {
+        const mockOnFilesSelected = vi.fn();
+        render(<FileUploader onFilesSelected={mockOnFilesSelected} validationMethod={() => ({ isValid: false })} />);
+
+        const file = new File(['test'], 'test.txt', { type: 'text/plain' });
+        const inputs = screen.getAllByTestId('file-input');
+        const input = inputs[inputs.length - 1] as HTMLInputElement;
+
+        fireEvent.change(input, {
+            target: { files: [file] },
+        });
+
+        expect(screen.getByText('Validation failed')).toBeInTheDocument();
+    });
+
+    it('should handle click to open file dialog', () => {
+        const mockOnFilesSelected = vi.fn();
+        const { container } = render(<FileUploader onFilesSelected={mockOnFilesSelected} />);
+
+        const uploadButton = container.querySelector(
+            'div[role="button"][aria-label="Upload files by clicking or dragging and dropping"]'
+        ) as HTMLDivElement;
+
+        const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+        const clickSpy = vi.spyOn(fileInput, 'click');
+
+        fireEvent.click(uploadButton);
+
+        expect(clickSpy).toHaveBeenCalled();
+        clickSpy.mockRestore();
+    });
+
+    it('should have proper accessibility attributes', () => {
+        const { container } = render(<FileUploader onFilesSelected={() => {}} />);
+
+        const uploadButton = container.querySelector('div[role="button"]');
+        const fileInput = screen.getByLabelText('Click here to upload files or drag and drop them here');
+
+        expect(uploadButton).toHaveAttribute('tabIndex', '0');
+        expect(uploadButton).toHaveAttribute('aria-label', 'Upload files by clicking or dragging and dropping');
+        expect(fileInput).toHaveAttribute('type', 'file');
+        expect(fileInput).toHaveAttribute('multiple');
+    });
+
+    it('should handle validation with drag and drop', () => {
+        const mockOnFilesSelected = vi.fn();
+        const { container } = render(
+            <FileUploader
+                onFilesSelected={mockOnFilesSelected}
+                validationMethod={() => ({ isValid: false, errorMessage: 'Validation failed' })}
+            />
+        );
+
+        const uploadButton = container.querySelector(
+            'div[role="button"][aria-label="Upload files by clicking or dragging and dropping"]'
+        ) as HTMLDivElement;
+
+        const file = new File(['test'], 'test.txt', { type: 'text/plain' });
+
+        fireEvent.drop(uploadButton, {
+            dataTransfer: {
+                files: [file],
+            },
+        });
+
+        expect(mockOnFilesSelected).not.toHaveBeenCalled();
+        expect(screen.getByText('Validation failed')).toBeInTheDocument();
     });
 });
