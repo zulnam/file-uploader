@@ -18,7 +18,7 @@ export const useFileUpload = () => {
     const uploadFiles = useCallback(async (files: File[]) => {
         setUploadState((prev) => ({ ...prev, isUploading: true }));
 
-        for (const file of files) {
+        const uploadPromises = files.map(async (file) => {
             try {
                 await uploadFile(file, (progress) => {
                     setUploadState((prev) => ({
@@ -35,8 +35,9 @@ export const useFileUpload = () => {
                     },
                 }));
             }
-        }
+        });
 
+        await Promise.allSettled(uploadPromises);
         setUploadState((prev) => ({ ...prev, isUploading: false }));
     }, []);
 
