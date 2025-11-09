@@ -137,7 +137,7 @@ describe('useFileUpload', () => {
             if (onProgress) {
                 onProgress(100);
             }
-            return Promise.resolve({ message: 'Success' });
+            return Promise.resolve({ message: 'Success', fileName: file.name });
         });
 
         const { result } = renderHook(() => useFileUpload());
@@ -190,7 +190,7 @@ describe('useFileUpload', () => {
                 onProgress(75);
                 onProgress(100);
             }
-            return Promise.resolve({ message: 'Success' });
+            return Promise.resolve({ message: 'Success', fileName: file.name });
         });
 
         const { result } = renderHook(() => useFileUpload());
